@@ -1,0 +1,1 @@
+ChatPress is a plugin.
