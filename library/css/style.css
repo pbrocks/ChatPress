@@ -8,10 +8,10 @@
 
 	.chatpress_channel_content_container {
 		float: left;
-		border: solid black 1px;
+		border: none;
 		padding: 1%;
 		width: 100%;
-		background: gray;
+		background: transparent;
 		padding-left: 5%;
 	}
 
@@ -37,8 +37,8 @@
 			.chatpress_message_div {
 				width: 100%;
 				border: solid black 1px;
-				padding-left: 10px;
-				padding-top: 10px;
+				padding: 10px;
+
 			}
 
 		.chatpress_channel_input_container {
@@ -60,7 +60,6 @@
 			text-align: center;
 			font-size: 10px;
 			line-height: 30px;
-			margin-right: 2%;
 		}
 
 .wp-editor-wrap {
@@ -70,6 +69,16 @@
 	overflow-y: hidden;
 	margin-top: 1%;
 }
+
+	.chatpress_title_hover_div {
+		display: none;
+		background: black;
+		color: white;
+		border-radius: 15px;
+		border: solid white 1px;
+		margin-top: -10px;
+		padding-left: 5%;
+	}
 
 
 		/* Theme overrides */

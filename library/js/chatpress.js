@@ -1,22 +1,17 @@
 jQuery( document ).ready( function() {
 
+	jQuery('.cp_quoted_comment_div').hide();
+
 	jQuery( 'body' ).on( 'click', '.chatpress_button_input', function() {
 
-		var index = jQuery( this ).data( 'index' );
-
-		var button = jQuery( this );
-
-		var message_input = tinymce.editors['editor_' + index].getContent();
-
-		var author_input = jQuery( '.chatpress_author_input' );
-
-		var style_input = jQuery( '.chatpress_style_input' );
-
-		var message = message_input; // parse this input
-
-		var author = jQuery( author_input ).val();
-
-		var style = jQuery( style_input ).val();
+		var index         = jQuery( this ).data( 'index' ),
+ 		    button        = jQuery( this ),
+				message_input = tinymce.editors['editor_' + index].getContent(),
+				author_input  = jQuery( '.chatpress_author_input' ),
+				style_input   = jQuery( '.chatpress_style_input' );
+				message       = message_input, // parse this input
+				author        = jQuery( author_input ).val(),
+				style         = jQuery( style_input ).val();
 
 		var data = {
 	    	index: index,
@@ -46,9 +41,7 @@ jQuery( document ).ready( function() {
 				var channel    = jQuery( '.chatpress_channel_message_container' ),
 				    this_index = jQuery( channel ).data( 'index' );
 
-				alert( 'message posted' );
-
-				// jQuery('.chatpress_button_refresh').trigger('click');
+				 jQuery( '.chatpress_message_div' ).remove();
 
 				channel.prepend( response.data.message );
 
@@ -63,21 +56,14 @@ jQuery( document ).ready( function() {
 
 		e.preventDefault();
 
-		var index = jQuery( this ).data( 'index' );
-
-		var button = jQuery( this );
-
-		var message_input = jQuery( '.chatpress_content_input' );
-
-		var author_input = jQuery( '.chatpress_author_input' );
-
-		var style_input = jQuery( '.chatpress_style_input' );
-
-		var message = jQuery( message_input ).val();
-
-		var author = jQuery( author_input ).val();
-
-		var style = jQuery( style_input ).val();
+		var index         = jQuery( this ).data( 'index' ),
+				button        = jQuery( this ),
+				message_input = jQuery( '.chatpress_content_input' ),
+				author_input  = jQuery( '.chatpress_author_input' ),
+				style_input   = jQuery( '.chatpress_style_input' ),
+				message       = jQuery( message_input ).val(),
+				author        = jQuery( author_input ).val(),
+				style         = jQuery( style_input ).val();
 
 		var data = {
 	    	index: index,
@@ -101,8 +87,6 @@ jQuery( document ).ready( function() {
 				    this_index = jQuery( channel ).data( 'index' );
 
 				jQuery( '.chatpress_message_div' ).remove();
-
-				alert( 'messages refreshed' );
 
 				channel.html( response.data.query_results );
 
@@ -150,14 +134,50 @@ jQuery( 'body' ).on( 'click', '.message_number_link', function( e ) {
 
 	e.preventDefault();
 
-	var message_number = jQuery( this ).data( 'message_number' );
+	var message_number = jQuery( this ).data( 'message_number' ),
+			index          = jQuery( this ).data( 'index' ),
+			content        = tinymce.editors['editor_' + index].getContent();
 
-	var index = jQuery( this ).data( 'index' );
-
-	var content = tinymce.editors['editor_' + index].getContent();
-
-	tinymce.editors['editor_' + index].setContent( content + '>> ' + message_number );
+	tinymce.editors['editor_' + index].setContent( content + '{{' + message_number + '' );
 
 });
+
+jQuery( '.chatpress_channel_message_container_title' ).hover( function() {
+
+	jQuery('.chatpress_title_hover_div').show();
+
+});
+
+jQuery( '.chatpress_channel_message_container_title' ).mouseout( function() {
+
+	jQuery('.chatpress_title_hover_div').hide();
+
+});
+
+jQuery( 'body' ).on( 'click', '.cp_quoted_comment_link', function( e ) {
+
+	var message_number = jQuery( this ).data( 'message_id' );
+
+	e.preventDefault();
+
+		//var grandparent = this.parent();
+
+	var div_string = '.cp_quoted_comment_div[data-message_id="' + message_number + '"]';
+
+	var the_div = jQuery( this ).parent().parent().find( div_string );
+
+
+	if ( jQuery( the_div ).css('display') === 'none') {
+
+		 jQuery( the_div ).show();
+
+	 } else {
+
+		 jQuery( the_div ).hide();
+
+	 }
+
+});
+
 
 });
