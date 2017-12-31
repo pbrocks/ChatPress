@@ -1,4 +1,4 @@
-cp <?php
+<?php
 /**
  * Plugin Name: ChatPress
  * Plugin URI:  https://wordpress.org/plugins/chatpress
@@ -34,7 +34,10 @@ class ChatPress {
 
 		add_action( 'init', [ $this, 'chatpress_message_function' ], 0 );
 
-		add_shortcode( 'chatpress_channel' , [ $this, 'cp_shortcode_function' ] );
+		add_shortcode( 'chatpress_channel', [ $this, 'cp_shortcode_function' ] );
+
+		// Hide message dashboard button
+		add_action( 'admin_menu', [ $this, 'cp_custom_menu_page_removal' ] );
 
 		$this->init();
 
@@ -86,6 +89,13 @@ class ChatPress {
 	}
 
 	/**
+	 * Hides the page for the message CPT from the dashboard
+	 */
+	public function cp_custom_menu_page_removal() {
+		remove_menu_page( $menu_slug );
+	}
+
+	/**
 	 * [wpm_settings_init A method to create the settings used by the plugin.]
 	 */
 	public function wpm_settings_init() {
@@ -110,19 +120,19 @@ class ChatPress {
 	 */
 	public function cp_create_crontask() {
 
-		 self::$options['cp_delete_messages_after'] = 'daily';
+		self::$options['cp_delete_messages_after'] = 'daily';
 
-		 update_option( 'cp_options', self::$options );
+		update_option( 'cp_options', self::$options );
 
-		 $cp_how_often = self::$options['cp_delete_messages_after'];
+		$cp_how_often = self::$options['cp_delete_messages_after'];
 
 		if ( 0 === self::$options['cp_prevent_email_cron_creation'] ) {
 
-			 wp_schedule_event( time(), 'weekly', 'cp_delete_old_messages' );
+			wp_schedule_event( time(), 'weekly', 'cp_delete_old_messages' );
 
-			 self::$options['cp_prevent_email_cron_creation'] = 1;
+			self::$options['cp_prevent_email_cron_creation'] = 1;
 
-			 update_option( 'cp_options', self::$options );
+			update_option( 'cp_options', self::$options );
 		}
 
 		// if ( 1 === $cp_prevent_email_cron_creation && wp_get_schedule('cp_delete_old_messages') != get_option( 'cp_options' )['cp_prevent_email_cron'] ) {
@@ -182,24 +192,24 @@ class ChatPress {
 			'items_list_navigation' => __( 'Items list navigation', 'chatpress' ),
 			'filter_items_list'     => __( 'Filter items list', 'chatpress' ),
 		];
-		$args = [
-			'label'                 => __( 'ChatPress', 'chatpress' ),
-			'description'           => __( 'Post Type Description', 'chatpress' ),
-			'labels'                => $labels,
-			'supports'              => [],
-			'taxonomies'            => [ 'category', 'post_tag' ],
-			'hierarchical'          => false,
-			'public'                => true,
-			'show_ui'               => true,
-			'show_in_menu'          => true,
-			'menu_position'         => 5,
-			'show_in_admin_bar'     => true,
-			'show_in_nav_menus'     => true,
-			'can_export'            => true,
-			'has_archive'           => true,
-			'exclude_from_search'   => false,
-			'publicly_queryable'    => true,
-			'capability_type'       => 'page',
+		$args   = [
+			'label'               => __( 'ChatPress', 'chatpress' ),
+			'description'         => __( 'Post Type Description', 'chatpress' ),
+			'labels'              => $labels,
+			'supports'            => [],
+			'taxonomies'          => [ 'category', 'post_tag' ],
+			'hierarchical'        => false,
+			'public'              => true,
+			'show_ui'             => true,
+			'show_in_menu'        => true,
+			'menu_position'       => 5,
+			'show_in_admin_bar'   => true,
+			'show_in_nav_menus'   => true,
+			'can_export'          => true,
+			'has_archive'         => true,
+			'exclude_from_search' => false,
+			'publicly_queryable'  => true,
+			'capability_type'     => 'page',
 			'menu_icon'           => 'dashicons-media-document',
 		];
 		register_post_type( 'chatpress_channel', $args );
@@ -218,13 +228,9 @@ class ChatPress {
 		if ( 'chatpress_channel' === $post_type ) {
 
 					$html  = '<div id="major-publishing-actions" style="overflow:hidden">';
-
-						$html .= '<div id="publishing-action">';
-
-							$html .= '<input type="button" accesskey="p" data-index="' . get_the_ID() . '" tabindex="5" value="Generate Shortcode" class="button-primary chatpress_shortcode_button" id="custom" name="publish">';
-
-						$html .= '</div>';
-
+					$html .= '<div id="publishing-action">';
+					$html .= '<input type="button" accesskey="p" data-index="' . get_the_ID() . '" tabindex="5" value="Generate Shortcode" class="button-primary chatpress_shortcode_button" id="custom" name="publish">';
+					$html .= '</div>';
 					$html .= '</div>';
 
 					echo esc_html( $html );
@@ -241,9 +247,9 @@ class ChatPress {
 		$prefix = 'chatpress_channel_';
 
 		$cmb_demo = new_cmb2_box( [
-			'id'            => $prefix . 'metabox',
-			'title'         => esc_html__( 'ChatPress', 'cmb2' ),
-			'object_types'  => [ 'chatpress_channel' ], // Post type.
+			'id'           => $prefix . 'metabox',
+			'title'        => esc_html__( 'ChatPress', 'cmb2' ),
+			'object_types' => [ 'chatpress_channel' ], // Post type.
 		] );
 
 			$cmb_demo->add_field( [
@@ -270,7 +276,7 @@ class ChatPress {
 
 		$cmb_demo->add_field( array(
 			'name'    => esc_html__( 'Background Color', 'cmb2' ),
-			'desc'    => esc_html__( '', 'cmb2' ),
+			'desc'    => '',
 			'id'      => $prefix . 'color',
 			'type'    => 'colorpicker',
 			'default' => '#ffffff',
@@ -306,7 +312,7 @@ class ChatPress {
 
 				$channel_query = new WP_Query( [
 					'post_type' => 'chatpress_channel',
-					'p' => $atts['id'],
+					'p'         => $atts['id'],
 				] );
 
 			if ( $channel_query->have_posts() ) {
@@ -319,7 +325,7 @@ class ChatPress {
 
 					$channel_styles = '';
 
-					if ( $this->starts_with( $atts['size'],'100%' ) ) {
+					if ( $this->starts_with( $atts['size'], '100%' ) ) {
 
 						$channel_styles = 'width: 100%;';
 
@@ -474,24 +480,24 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 			'items_list_navigation' => __( 'Items list navigation', 'chatpress' ),
 			'filter_items_list'     => __( 'Filter items list', 'chatpress' ),
 		];
-		$args = [
-			'label'                 => __( 'ChatPress', 'chatpress' ),
-			'description'           => __( 'Post Type Description', 'chatpress' ),
-			'labels'                => $labels,
-			'supports'              => [],
-			'taxonomies'            => [ 'category', 'post_tag' ],
-			'hierarchical'          => false,
-			'public'                => true,
-			'show_ui'               => true,
-			'show_in_menu'          => true,
-			'menu_position'         => 5,
-			'show_in_admin_bar'     => true,
-			'show_in_nav_menus'     => true,
-			'can_export'            => true,
-			'has_archive'           => true,
-			'exclude_from_search'   => false,
-			'publicly_queryable'    => true,
-			'capability_type'       => 'page',
+		$args   = [
+			'label'               => __( 'ChatPress', 'chatpress' ),
+			'description'         => __( 'Post Type Description', 'chatpress' ),
+			'labels'              => $labels,
+			'supports'            => [],
+			'taxonomies'          => [ 'category', 'post_tag' ],
+			'hierarchical'        => false,
+			'public'              => true,
+			'show_ui'             => true,
+			'show_in_menu'        => true,
+			'menu_position'       => 5,
+			'show_in_admin_bar'   => true,
+			'show_in_nav_menus'   => true,
+			'can_export'          => true,
+			'has_archive'         => true,
+			'exclude_from_search' => false,
+			'publicly_queryable'  => true,
+			'capability_type'     => 'page',
 			'menu_icon'           => 'dashicons-media-document',
 		];
 		register_post_type( 'chatpress_message', $args );
@@ -507,9 +513,9 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 		$prefix = 'chatpress_message_';
 
 		$cmb_message = new_cmb2_box( [
-			'id'            => $prefix . 'metabox',
-			'title'         => esc_html__( 'ChatPress Info', 'cmb2' ),
-			'object_types'  => [ 'chatpress_message' ], // Post type.
+			'id'           => $prefix . 'metabox',
+			'title'        => esc_html__( 'ChatPress Info', 'cmb2' ),
+			'object_types' => [ 'chatpress_message' ], // Post type.
 		] );
 
 	}
@@ -588,11 +594,11 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 
 		// Create post object.
 		$my_post = [
-			'post_title'    => $index,
-			'post_type'     => 'chatpress_message',
-			'post_content'  => $message,
-			'post_status'   => 'publish',
-			'post_author'   => 1,
+			'post_title'   => $index,
+			'post_type'    => 'chatpress_message',
+			'post_content' => $message,
+			'post_status'  => 'publish',
+			'post_author'  => 1,
 		];
 
 		$message_number = $this->random_20_chars();
@@ -683,7 +689,7 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 
 			$preceeding_char = substr( $input, $i - 1, 1 );
 
-			if ( $char === '{' ) {
+			if ( '{' === $char ) {
 
 				if ( '{' === $preceeding_char ) {
 
@@ -737,17 +743,17 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 			}
 		}
 
-		 return $output;
+		return $output;
 
 	}
 
-	 /**
-	  * Create cron schedule for garbage collection
-	  *
-	  * @param Object $schedules - string to search through.
-	  *
-	  * @since 0.1
-	  */
+	/**
+	 * Create cron schedule for garbage collection
+	 *
+	 * @param Object $schedules - string to search through.
+	 *
+	 * @since 0.1
+	*/
 	public function custom_cron_schedules( $schedules ) {
 
 		if ( ! isset( $schedules['weekly'] ) ) {
@@ -783,7 +789,7 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 		$final = '';
 
 		for ( $i = 1; $i < 20; $i++ ) {
-			$digit = rand( 1, 10 );
+			$digit  = rand( 1, 10 );
 			$final .= $digit;
 		}
 
@@ -823,7 +829,9 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 	 */
 	public function cp_enqueue_styles() {
 
-		wp_enqueue_style( 'cp_stylesheet', plugin_dir_url( __FILE__ ) . '/library/css/style.css', [], false, 'all' );
+		$suffix = SCRIPT_DEBUG ? '' : '.min';
+
+		wp_enqueue_style( 'cp_stylesheet', plugin_dir_url( __FILE__ ) . "/library/css/style{$suffix}.css", [], false, 'all' );
 
 		wp_enqueue_style( 'cp_fontawesome', plugin_dir_url( __FILE__ ) . '/library/fonts/font-awesome-4.7.0/css/font-awesome.min.css', [], false, 'all' );
 
@@ -836,11 +844,11 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 	 */
 	public function cp_enqueue_admin_scripts() {
 
-		wp_register_script( 'cp_backend', plugin_dir_url( __FILE__ ) . '/library/js/chatpress_backend.js', [ 'jquery' ], 'all', true );
+		wp_register_script( 'cp_backend', plugin_dir_url( __FILE__ ) . "/library/js/chatpress_backend{$suffix}.js", [ 'jquery' ], 'all', true );
 
 		wp_enqueue_script( 'cp_backend' );
 
-		wp_enqueue_style( 'cp_admin_stylesheet', plugin_dir_url( __FILE__ ) . '/library/css/admin_style.css', [], false, 'all' );
+		wp_enqueue_style( 'cp_admin_stylesheet', plugin_dir_url( __FILE__ ) . "/library/css/admin_style{$suffix}.css", [], false, 'all' );
 
 	}
 
@@ -851,7 +859,7 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 	 */
 	public function cp_enqueue_scripts() {
 
-		wp_register_script( 'cp_script', plugin_dir_url( __FILE__ ) . '/library/js/chatpress.js', [ 'jquery' ], 'all', true );
+		wp_register_script( 'cp_script', plugin_dir_url( __FILE__ ) . "/library/js/chatpress{$suffix}.js", [ 'jquery' ], 'all', true );
 
 		wp_localize_script( 'cp_script', 'cp_script', [
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
@@ -859,7 +867,7 @@ if ( ! current_user_can( 'editor' ) && ! current_user_can( 'administrator' ) ) {
 
 		wp_enqueue_script( 'cp_script' );
 
-		wp_register_script( 'cp_frontend', plugin_dir_url( __FILE__ ) . '/library/js/chatpress_frontend.js', [ 'jquery' ], 'all', true );
+		wp_register_script( 'cp_frontend', plugin_dir_url( __FILE__ ) . "/library/js/chatpress_frontend{$suffix}.js", [ 'jquery' ], 'all', true );
 
 		wp_enqueue_script( 'cp_frontend' );
 
