@@ -1,243 +1,280 @@
-'use strict';
 module.exports = function(grunt) {
 
-  grunt.initConfig({
+	var pkg = grunt.file.readJSON( 'package.json' );
 
-		pkg: grunt.file.readJSON('package.json'),
-
-	// js minification
-    uglify: {
-      dist: {
-        files: {
-          'library/js/chatpress.min.js': [
-            '.dev/js/chatpress.js',
-          ],
-        }
-      }
-    },
-
-    // Autoprefixer for our CSS files
-    postcss: {
-      options: {
-        map: true,
-        processors: [
-          require('autoprefixer-core') ({
-            browsers: ['last 2 versions']
-          })
-        ]
-      },
-      dist: {
-        src: ['library/css/*.css']
-      }
-    },
-    auto_install: {
-      local: {}
-    },
-
-    // css minify all contents of our directory and add .min.css extension
-    cssmin: {
-      target: {
-        files: [
-          {
-						'library/css/style.min.css':
-						[
-							'library/css/style.css',
+	grunt.initConfig({
+		pkg: pkg,
+		jshint: {
+			files: ['library/js/**/*.js', '!library/js/justgage.js', '!library/js/*.min.js', '!library/js/renamed.js', 'Gruntfile.js'],
+			options: {
+				globals: {
+					jQuery: true
+				}
+			}
+		},
+		watch: {
+			css: {
+				files: [ 'library/css/*.css, ! library/css/*.min.css' ],
+				tasks: [ 'cssmin', 'watch-banner' ],
+				options: {
+					spawn: false,
+					event: [ 'all' ]
+				}
+			},
+			js: {
+				files: [ 'library/js/*.js', 'library/js/*.min.js' ],
+				tasks: [ 'watch-banner' ],
+				options: {
+					spawn: false,
+					event: [ 'all' ]
+				}
+			},
+			images: {
+					files: 'library/images/**/*.{gif,jpeg,jpg,png,svg}',
+					tasks: [ 'imagemin' ]
+			},
+			readme: {
+				files: 'readme.txt',
+				tasks: [ 'wp_readme_to_markdown' ]
+			},
+		},
+		uglify: {
+			options: {
+				ASCIIOnly: true
+			},
+			all: {
+				expand: true,
+				cwd: 'library/js/',
+				src: [
+					'**/*.js',
+					'!**/*.min.js',
+				],
+				dest: 'library/js/',
+				ext: '.min.js'
+			}
+		},
+		copy: {
+			deploy: {
+				files: [
+					{
+						expand: true,
+						src: [
+							'*.php',
+							'readme.txt',
+							'library/**',
+							'templates/**',
 						],
-          },
-        ]
-      }
-    },
-
-		replace: {
-			base_file: {
-				src: [ 'php-notifier.php' ],
-				overwrite: true,
-				replacements: [
-					{
-						from: /Version:     (.*)/,
-						to: "Version:     <%= pkg.version %>"
-					},
-					{
-						from: /define\(\s*'PHP_NOTIFIER_VERSION',\s*'(.*)'\s*\);/,
-						to: "define( 'PHP_NOTIFIER_VERSION', '<%= pkg.version %>' );"
+						dest: 'build/wp-monitor/'
 					}
 				]
-			},
-			// replace tested up to in readme
-			readme_txt: {
-				src: [ 'readme.txt' ],
-				overwrite: true,
-				replacements: [
-					{
-						from: /Tested up to:      (.*)/,
-						to: "Tested up to:      <%= pkg.tested_up_to %>"
-					},
-					{
-						from: /Stable tag:        (.*)/,
-						to: "Stable tag:        <%= pkg.version %>"
-					}
-				]
-			},
-
-		// Generate a nice banner for our css/js files
-		usebanner: {
-	    taskName: {
-	      options: {
-	        position: 'top',
+			}
+		},
+		clean: {
+			build: [ 'build/*' ]
+		},
+		compress: {
+			main: {
+				options: {
+					archive: 'build/wp-monitor-v<%= pkg.version %>.zip'
+				},
+				files: [ {
+					cwd: 'build/wp-monitor/',
+					dest: 'wp-monitor',
+					src: [ '**' ]
+				} ]
+		}
+	},
+	usebanner: {
+			taskName: {
+				options: {
+					position: 'top',
 					replace: true,
-	        banner: '/*\n'+
+					banner: '/*\n'+
 						' * @Plugin <%= pkg.title %>\n' +
 						' * @Author <%= pkg.author %>\n'+
 						' * @Site <%= pkg.site %>\n'+
 						' * @Version <%= pkg.version %>\n' +
-		        ' * @Build <%= grunt.template.today("mm-dd-yyyy") %>\n'+
+						' * @Build <%= grunt.template.today("mm-dd-yyyy") %>\n'+
 						' */',
-	        linebreak: true
-	      },
-	      files: {
-	        src: [
+					linebreak: true
+				},
+				files: {
+					src: [
 						'library/css/*.min.css',
-						'library/js/*.min.js',
 					]
-	      }
-	    }
-	  },
-
-    // watch our project for changes
-    watch: {
-      css: {
-        files: [
-					'.dev/sass/admin/*.scss',
-				],
-        tasks: [ 'sass', 'cssmin', 'usebanner' ],
-        options: {
-          spawn: false,
-          event: [ 'all' ]
+				}
+			}
+		},
+		autoprefixer: {
+            options: {
+                browsers: [
+                    'Android >= 2.1',
+                    'Chrome >= 21',
+                    'Edge >= 12',
+                    'Explorer >= 7',
+                    'Firefox >= 17',
+                    'Opera >= 12.1',
+                    'Safari >= 6.0'
+                ],
+                cascade: false
+            },
+            main: {
+                src: [ 'library/css/*.css' ]
+            }
         },
-      },
-			js: {
-        files: [
-					'.dev/js/*.js',
-					'! .dev/js/*.min.js',
-				],
-        tasks: [ 'uglify', 'usebanner', 'copy:js' ],
-        options: {
-          spawn: false,
-          event: [ 'all' ]
-        },
-      },
-    },
-
-		copy: {
-			main: {
+		cssmin: {
+			target: {
 				files: [
 					{
 						expand: true,
-						src: [
-							'library/*',
-							'! library/.DS_Store',
-							'partials/',
-							'php-notifier.php',
-							'readme.txt'
-						],
-						dest: 'build/php-notifier/',
-					},
-				],
-			},
-			js: {
-				files: [
-					{
-						expand: true,
-						flatten: true,
-						filter: 'isFile',
-						src: [
-							'.dev/js/php-notifier-notices.js',
-						],
-						dest: 'library/js',
-					},
-				],
-			},
-		},
-
-		clean: {
-			build: [ 'build/*' ],
-			zip:   [
-				'build/php-notifier/',
-				'build/.DS_Store'
-			],
-		},
-
-		compress: {
-		  main: {
-		    options: {
-		      archive: 'build/php-notifier-v<%= pkg.version %>.zip'
-		    },
-		    files: [
-		      {
-						cwd: 'build/php-notifier/',
-						dest: 'php-notifier/',
-						src: [ '**' ]
+						cwd: 'library/css',
+						src: ['*.css'],
+						dest: 'library/css',
+						ext: '.min.css'
 					}
-		    ]
-		  }
+				]
+			}
 		},
+		imagemin: {
+						options: {
+								optimizationLevel: 3
+						},
+						assets: {
+								expand: true,
+								cwd: 'library/images/',
+								src: [ '**/*.{gif,jpeg,jpg,png,svg}' ],
+								dest: 'library/images/'
+						}
+				},
+				devUpdate: {
+					packages: {
+							options: {
+								packageJson: null,
+							packages: {
+								devDependencies: true,
+								dependencies: false
+							},
+							reportOnlyPkgs: [],
+							reportUpdated: false,
+							semver: true,
+							updateType: 'force'
+						}
+					}
+				},
+				replace: {
+			base_file: {
+				src: [ 'class-wpmonitor.php' ],
+				overwrite: true,
+				replacements: [{
+					from: /Version: (.*)/,
+					to: "Version: <%= pkg.version %>"
+				}]
+			},
+			readme_txt: {
+				src: [ 'readme.txt' ],
+				overwrite: true,
+				replacements: [
+				{
+					from: /Stable tag: (.*)/,
+					to: "Stable tag: <%= pkg.version %>"
+				},
+				{
+					from: /Tested up to: (.*)/,
+					to: "Tested up to: <%= pkg.tested_up_to %>"
+				}
+			]
+			},
+			readme_md: {
+				src: [ 'README.md' ],
+				overwrite: true,
+				replacements: [
+					{
+						from: /# WP Monitor - (.*)/,
+						to: "# WP Monitor - <%= pkg.version %>"
+					},
+					{
+						from: /\*\*Stable tag:\*\* {8}(.*)/,
+						to: "\**Stable tag:**        <%= pkg.version %> <br />"
+					},
+					{
+						from: /\*\*Tested up to:\*\* {6}WordPress v(.*)/,
+						to: "\**Tested up to:**      WordPress v<%= pkg.tested_up_to %> <br />"
+					}
+				]
+			},
+			php: {
+				overwrite: true,
+				replacements: [
+					{
+						from: /@since(\s+)NEXT/g,
+						to: '@since$1<%= pkg.version %>'
+					},
+					{
+						from: /@NEXT/g,
+						to: '<%= pkg.version %>'
+					},
+				],
+				src: [ '*.php' ]
+			},
+		},
+		wp_deploy: {
+			deploy: {
+				options: {
+					assets_dir: 'wp-org-assets/',
+					plugin_slug: 'wp-monitor',
+					build_dir: 'build/wp-monitor/',
+					plugin_main_file: 'class-wpmonitor.php',
+					deploy_trunk: true,
+					deploy_tag: pkg.version,
+					max_buffer: 1024*1024*10
+				}
+			}
+		},
+		wp_readme_to_markdown: {
+		            options: {
+		                post_convert: function( readme ) {
+		                    var matches = readme.match( /\*\*Tags:\*\*(.*)\r?\n/ ),
+		                        tags    = matches[1].trim().split( ', ' ),
+		                        section = matches[0];
 
-		shell: {
-			docs: [
-				'git clone -b gh-pages https://github.com/CodeParrots/php-notifier.git documentation',
-			].join( '&&' )
+		                    for ( var i = 0; i < tags.length; i++ ) {
+		                        section = section.replace( tags[i], '[' + tags[i] + '](https://wordpress.org/themes/tags/' + tags[i] + '/)' );
+		                    }
+
+		                    // Tag links
+		                    readme = readme.replace( matches[0], section );
+
+		                    // Badges
+		                    readme = readme.replace( '## Description ##', grunt.template.process( pkg.badges.join( ' ' ) ) + "  \r\n\r\n## Description ##" );
+
+		                    return readme;
+		                }
+		            },
+		            main: {
+		                files: {
+		                    'readme.md': 'readme.txt'
+		                }
+		            }
 		}
-
 	});
 
-	grunt.loadNpmTasks( 'grunt-contrib-sass' );
-	grunt.loadNpmTasks( 'grunt-contrib-uglify' );
-	grunt.loadNpmTasks( 'grunt-contrib-cssmin' );
-	grunt.loadNpmTasks( 'grunt-contrib-watch' );
-	grunt.loadNpmTasks( 'grunt-banner' );
-	grunt.loadNpmTasks( 'grunt-postcss' );
-	grunt.loadNpmTasks( 'grunt-contrib-copy' );
-	grunt.loadNpmTasks( 'grunt-text-replace' );
-	grunt.loadNpmTasks( 'grunt-contrib-compress' );
-	grunt.loadNpmTasks( 'grunt-menu' );
-	grunt.loadNpmTasks( 'grunt-contrib-clean' );
-	grunt.loadNpmTasks( 'grunt-shell' );
+	require( 'matchdep' ).filterDev( 'grunt-*' ).forEach( grunt.loadNpmTasks );
 
-	grunt.registerTask( 'default', [ 'menu' ] );
-
-	// Run Grunt.js
-	grunt.registerTask( 'Run Grunt.js Tasks', 'Default grunt task.', [
-		'sass',
-		'postcss',
-		'cssmin',
+	grunt.registerTask('default', ['autoprefixer', 'cssmin', 'usebanner', 'jshint', 'uglify', 'imagemin']);
+	grunt.registerTask('build', ['default', 'clean', 'copy', 'compress']);
+	grunt.registerTask( 'watch-banner', [
 		'uglify',
-		'copy:js',
-		'usebanner',
-		'watch',
-	] );
-
-	// Bump Version & Tested up to version
-	grunt.registerTask( 'Bump Version', 'Bump the version and tested up to version.', [
-		'replace',
-	] );
-
-	// Generate documentation into the /documentation/ directory
-	grunt.registerTask( 'Generate Documentation', 'Generate documentation into the /documentation/ directory.', [
-		'shell:docs',
-	] );
-
-	// Build Task
-	grunt.registerTask( 'Build Package', 'Build the package into the /build/ directory.', [
-		'sass',
-		'postcss',
+		'autoprefixer',
 		'cssmin',
-		'uglify',
-		'copy:js',
-		'usebanner',
-		'replace',
-		'clean',
-		'copy:main',
-		'compress',
+		'usebanner'
 	] );
-
+	grunt.registerTask( 'wpdeploy', [
+		'build',
+		'wp_deploy'
+	] );
+	grunt.registerTask( 'readme', [
+		'wp_readme_to_markdown'
+	] );
+  grunt.registerTask( 'jshinter', [ 'jshint' ] );
+	grunt.registerTask( 'version',     [ 'replace', 'readme', 'default', 'clean' ] );
 };

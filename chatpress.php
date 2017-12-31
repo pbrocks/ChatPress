@@ -1,4 +1,4 @@
-<?php
+cp <?php
 /**
  * Plugin Name: ChatPress
  * Plugin URI:  https://wordpress.org/plugins/chatpress
