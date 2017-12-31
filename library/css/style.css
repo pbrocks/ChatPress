@@ -74,6 +74,7 @@
 		display: none;
 		background: black;
 		color: white;
+		-webkit-border-radius: 15px;
 		border-radius: 15px;
 		border: solid white 1px;
 		margin-top: -10px;
