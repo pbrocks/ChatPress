@@ -102,7 +102,7 @@ class ChatPress {
 	 *
 	 * @since 0.1
 	 */
-	public function cpmsettings_init() {
+	public function cp_settings_init() {
 				register_setting(
 					'cp_options',
 					'cp_options',
@@ -230,7 +230,7 @@ class ChatPress {
 					$html .= '</div>';
 					$html .= '</div>';
 
-					echo esc_html( $html );
+					echo $html ;
 		}
 
 	}
@@ -350,20 +350,20 @@ class ChatPress {
 					}
 					?>
 
-						<div class="chatpress_channel_wrapper" style="<?php echo esc_html( $background ) . ' ' . esc_html( $channel_styles ); ?>" data-index="<?php echo esc_html( $channel_id ); ?>">
+						<div class="chatpress_channel_wrapper" style="<?php echo  $background . ' ' . $channel_styles ; ?>" data-index="<?php echo $channel_id; ?>">
 
 
 							<div style="float: right;">
 
-									<a href="#" class="chatpress_button_refresh" style="float: right;" data-index="<?php echo esc_html( $channel_id ); ?>"> <i class="fa fa-refresh" aria-hidden="true"></i> Refresh</a>
+									<a href="#" class="chatpress_button_refresh" style="float: right;" data-index="<?php echo $channel_id; ?>"> <i class="fa fa-refresh" aria-hidden="true"></i> Refresh</a>
 
 							</div>
 
 							<p class="chatpress_channel_message_container_title"> <?php echo get_the_title(); ?> </p>
 
 							<div class="chatpress_title_hover_div">
-								<p> Moderator: <?php echo esc_html( get_post_meta( get_the_ID(), 'chatpress_channel_moderator', true ) ); ?><br />
-										Topic: <?php echo esc_html( get_post_meta( get_the_ID(), 'chatpress_channel_topic', true ) ); ?>
+								<p> Moderator: <?php echo get_post_meta( get_the_ID(), 'chatpress_channel_moderator', true ); ?><br />
+										Topic: <?php echo get_post_meta( get_the_ID(), 'chatpress_channel_topic', true ); ?>
 								</p>
 							</div>
 
@@ -371,7 +371,7 @@ class ChatPress {
 
 								<div class="chatpress_channel_content_container">
 
-									<div class="chatpress_channel_message_container" data-index="<?php echo esc_html( $channel_id ); ?>">
+									<div class="chatpress_channel_message_container" data-index="<?php echo $channel_id; ?>">
 								<?php
 									wp_reset_postdata();
 
@@ -385,11 +385,11 @@ class ChatPress {
 
 										<?php if ( '100% of container' === $atts['size'] ) { ?>
 
-											<input type="text" class="chatpress_text_input chatpress_content_input" placeholder="Message" style="width: 50%; float: left;" data-index="<?php echo esc_html( $channel_id ); ?>"></input>
+											<input type="text" class="chatpress_text_input chatpress_content_input" placeholder="Message" style="width: 50%; float: left;" data-index="<?php echo $channel_id; ?>"></input>
 
-											<input type="text" class="chatpress_text_input chatpress_style_input" placeholder="Style" style="width: 49%;  margin-right: 1%; float: left;" data-index="<?php echo esc_html( $channel_id ); ?>"></input>
+											<input type="text" class="chatpress_text_input chatpress_style_input" placeholder="Style" style="width: 49%;  margin-right: 1%; float: left;" data-index="<?php echo $channel_id; ?>"></input>
 
-											<input type="button" class="chatpress_button_input" value="Send" style="width: 20%; float: left;" data-index="<?php echo esc_html( $channel_id ); ?>"></input>
+											<input type="button" class="chatpress_button_input" value="Send" style="width: 20%; float: left;" data-index="<?php echo $channel_id; ?>"></input>
 
 										<?php
 
@@ -397,11 +397,11 @@ class ChatPress {
 
 	if ( current_user_can( 'editor' ) || current_user_can( 'administrator' ) ) {
 
-		wp_editor( '', 'editor_' . esc_html( $channel_id ) );
+		wp_editor( '', 'editor_' . $channel_id );
 
 		?>
 
-		<input type="button" class="chatpress_button_input" value="Send" style="width: 100%; float: left; margin-top: 1%; padding-top: 20px; padding-bottom: 20px !important;" data-index="<?php echo esc_html( $channel_id ); ?>"></input>
+		<input type="button" class="chatpress_button_input" value="Send" style="width: 100%; float: left; margin-top: 1%; padding-top: 20px; padding-bottom: 20px !important;" data-index="<?php echo $channel_id; ?>"></input>
 
 
 <?php
