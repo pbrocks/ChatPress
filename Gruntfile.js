@@ -14,7 +14,7 @@ module.exports = function(grunt) {
 		},
 		watch: {
 			css: {
-				files: [ 'library/css/*.css, ! library/css/*.min.css' ],
+				files: [ 'library/css/*.css, ! library/css/*.min.css', 'library/css/admin_style.css', 'library/style.css' ],
 				tasks: [ 'cssmin', 'watch-banner' ],
 				options: {
 					spawn: false,

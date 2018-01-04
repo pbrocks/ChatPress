@@ -23,7 +23,7 @@ class ChatPress {
 
 		self::$options = get_option( 'cp_options', [
 			'cp_delete_messages_after'       => 'weekly',
-			'cp_prevent_email_cron_creation' => 0,
+			'cp_prevent_email_cron_creation' => false,
 			'rick'                           => true,
 			'morty'                          => false,
 		] );
@@ -104,13 +104,6 @@ class ChatPress {
 					'cp_options',
 					[ $this, 'wpm_sanitize' ]
 				);
-
-				register_setting(
-					'cp_prevent_email_cron_creation',
-					'cp_prevent_email_cron_creation',
-					[ $this, 'wpm_sanitize' ]
-				);
-
 	}
 
 	/**
