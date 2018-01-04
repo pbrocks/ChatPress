@@ -84,21 +84,25 @@ class ChatPress {
 
 		add_action( 'init', [ $this, 'cp_create_crontask' ] );
 
-		add_action( 'admin_init', array( $this, 'wpm_settings_init' ) );
+		add_action( 'admin_init', array( $this, 'cp_settings_init' ) );
 
 	}
 
 	/**
 	 * Hides the page for the message CPT from the dashboard
+	 *
+	 * @since 0.1
 	 */
 	public function cp_custom_menu_page_removal() {
 		remove_menu_page( $menu_slug );
 	}
 
 	/**
-	 * [wpm_settings_init A method to create the settings used by the plugin.]
+	 * [cp_settings_init A method to create the settings used by the plugin.]
+	 *
+	 * @since 0.1
 	 */
-	public function wpm_settings_init() {
+	public function cpmsettings_init() {
 				register_setting(
 					'cp_options',
 					'cp_options',
@@ -119,7 +123,7 @@ class ChatPress {
 
 		$cp_how_often = self::$options['cp_delete_messages_after'];
 
-		if ( 0 === self::$options['cp_prevent_email_cron_creation'] ) {
+		if ( ! self::$options['cp_prevent_email_cron_creation'] ) {
 
 			wp_schedule_event( time(), 'weekly', 'cp_delete_old_messages' );
 
@@ -128,23 +132,23 @@ class ChatPress {
 			update_option( 'cp_options', self::$options );
 		}
 
-		// if ( 1 === $cp_prevent_email_cron_creation && wp_get_schedule('cp_delete_old_messages') != get_option( 'cp_options' )['cp_prevent_email_cron'] ) {
-		//
-		// wp_clear_scheduled_hook( 'cp_delete_old_messages' );
-		//
-		// 	wp_schedule_event( time(), $cp_how_often, 'cp_delete_old_messages' );
-		//
-		// }
+		$cp_prevent_email_cron_creation = get_option( 'cp_options' )['cp_prevent_email_cron'];
+
+		if ( ! $cp_prevent_email_cron_creation && wp_get_schedule( 'cp_delete_old_messages' ) != get_option( 'cp_options' )['cp_prevent_email_cron'] ) {
+
+			wp_schedule_event( time(), $cp_how_often, 'cp_delete_old_messages' );
+
+		}
 
 	}
 
 	public function wpm_sanitize( $input ) {
 
-					$valid = array();
+		$valid = [];
 
-					$valid['wpm_show_monitor'] = (bool) empty( $input['cp_prevent_email_cron_creation'] ) ? 0 : 1;
+		$valid['wpm_show_monitor'] = (bool) empty( $input['cp_prevent_email_cron_creation'] ) ? 0 : 1;
 
-					return $valid;
+		return $valid;
 
 	}
 
