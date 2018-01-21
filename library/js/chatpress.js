@@ -6,29 +6,18 @@ jQuery( document ).ready( function() {
 
 		var index         = jQuery( this ).data( 'index' ),
  		    button        = jQuery( this ),
-				message_input = tinymce.editors['editor_' + index].getContent(),
-				author_input  = jQuery( '.chatpress_author_input' ),
-				style_input   = jQuery( '.chatpress_style_input' );
-				message       = message_input, // parse this input
-				author        = jQuery( author_input ).val(),
-				style         = jQuery( style_input ).val();
+				message_input = jQuery('.chatpress_text_input'),
+				message       = message_input.val(); // parse this input
 
 		var data = {
 	    	index: index,
-	    	author: author,
 	    	message: message,
-	    	style: style,
 		};
 
-		tinymce.editors['editor_' + index].setContent('');
+		message_input.val('');
 
-		// jQuery( message_input ).val('');
 
-		jQuery( author_input ).val('');
-
-		jQuery( style_input ).val('');
-
-			jQuery.ajax({
+		jQuery.ajax({
 			type: 'POST',   // Adding Post method
 			url: cp_script.ajaxurl, // Including ajax file
 			data: {
@@ -38,12 +27,9 @@ jQuery( document ).ready( function() {
 			success: function( response ) { // Show returned data using the function.
 				// alert( data.message );
 
-				var channel    = jQuery( '.chatpress_channel_message_container' ),
-				    this_index = jQuery( channel ).data( 'index' );
+				var channel = jQuery( '.chatpress_channel_message_container' );
 
-				 jQuery( '.chatpress_message_div' ).remove();
-
-				channel.prepend( response.data.message );
+				// call refresh method
 
 			}
 
@@ -52,26 +38,14 @@ jQuery( document ).ready( function() {
 
 	});
 
-	jQuery( 'body' ).on( 'click', '.chatpress_button_refresh', function( e ) {
+	jQuery( 'body' ).on( 'click', '.chatpress_button_refresh', function() {
 
-		e.preventDefault();
+		//e.preventDefault();
 
-		var index         = jQuery( this ).data( 'index' ),
-				button        = jQuery( this ),
-				message_input = jQuery( '.chatpress_content_input' ),
-				author_input  = jQuery( '.chatpress_author_input' ),
-				style_input   = jQuery( '.chatpress_style_input' ),
-				message       = jQuery( message_input ).val(),
-				author        = jQuery( author_input ).val(),
-				style         = jQuery( style_input ).val();
+		var button  = jQuery( this ),
+				index = jQuery( this ).data( 'index' );
 
-		var data = {
-	    	index: index,
-	    	author: author,
-	    	message: message,
-	    	style: style,
-		};
-
+			//alert( 'refreshed' );
 
 			jQuery.ajax({
 			type: 'POST',   // Adding Post method
@@ -81,14 +55,11 @@ jQuery( document ).ready( function() {
 		   	"data"   : data
 			},
 			success: function( response ) { // Show returned data using the function.
-				// alert( data.message );
+				alert( 'refreshed' );
 
-				var channel    = jQuery( '.chatpress_channel_message_container' ),
-				    this_index = jQuery( channel ).data( 'index' );
+				// var channel = jQuery( '.chatpress_channel_message_container' );
 
-				jQuery( '.chatpress_message_div' ).remove();
-
-				channel.html( response.data.query_results );
+				// channel.html( response.data.query_results )
 
 			}
 
