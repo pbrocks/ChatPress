@@ -478,6 +478,8 @@ class ChatPress {
 
 		$messages = '';
 
+		$message_id = '';
+
 		// Create the query + query the database
 		$message_query = new WP_Query( [
 			'post_type'      => 'chatpress_message',
@@ -492,21 +494,21 @@ class ChatPress {
 
 					$message_query->the_post();
 
-					$messages .= '<div class="chatpress_message_div" data-index="' . get_the_title() . '">';
+					$messages .= '<div class="chatpress_message_div" data-index="' . get_the_title() . '" data-id="' . get_post_meta( get_the_ID(), 'message_id', true ) . '">';
 
 				if ( current_user_can( 'editor' ) || current_user_can( 'administrator' ) ) {
 
 						$messages .= '<div class="chatpress_message_admin_panel">';
 
-						$messages .= '<a class="message_delete_link" href="#" data-index="' . get_the_ID() . '">Delete</a>';
+						$messages .= '<a class="message_delete_link" href="#" data-index="' . get_the_ID() . '" data-message_id="' . get_post_meta( get_the_ID(), 'message_id', true ) . '">Delete</a>';
 
 						$messages .= '</div>';
 
 				}
 
-					$messages .= '<div style="float: left;">' . get_post_meta( get_the_ID(), 'icon', true ) . '</div>';
+					$messages .= '<p class="chatpress_message_datetime" style="float: left;">&nbsp;' . get_post_time( 'm/d/y h:m:s' ) . '&nbsp;&nbsp;</p>';
 
-					$messages .= '<p style="float: left;">&nbsp;' . get_post_time( 'm/d/y h:m:s' ) . '&nbsp;&nbsp;</p><a href="#" class="message_number_link" data-index="' . $channel_number . '" style="float: left; color: green; font-size: 10px;" data-message_number="' . get_post_meta( get_the_ID(), 'message_number', true ) . '">' . get_post_meta( get_the_ID(), 'message_number', true ) . '</a>' . '<br /> ';
+					$messages .= '<a href="#" class="message_id_link" data-index="' . $channel_number . '" style="float: left; color: green; font-size: 10px;" data-message_id="' . get_post_meta( get_the_ID(), 'message_id', true ) . '">' . get_post_meta( get_the_ID(), 'message_id', true ) . '</a>' . '<br /> ';
 
 					$messages .= '<p>' . get_the_content() . '</p>';
 
@@ -533,7 +535,7 @@ class ChatPress {
 
 		//$message = $this->cp_parse( $message );
 
-		//$message_number = $this->random_20_chars();
+		$message_id = $this->random_20_chars();
 
 		// Create post object.
 		$my_post = [
@@ -544,20 +546,14 @@ class ChatPress {
 			'post_author'  => 1,
 		];
 
-		//$message_number = $this->random_20_chars();
-
-		//$current_user = wp_get_current_user();
-
 		// Insert the post into the database.
 		$my_new_post = wp_insert_post( $my_post );
 		//wp_insert_post( $my_post );
 
-		//add_post_meta( $my_new_post, 'message_number', $message_number );
-
-		//$post_code = $this->cp_populate( $index );
+		add_post_meta( $my_new_post, 'message_id', $message_id );
 
 		wp_send_json_success( [
-			'message' => 'posted mew message',
+			'message' => 'posted new message',
 		] );
 
 	}
@@ -569,14 +565,11 @@ class ChatPress {
 	 */
 	public function chatpress_refresh_message() {
 
-		//$index = wp_unslash( $_POST['data']['index'] );
+		$index = wp_unslash( $_POST['data'] );
 
-		//$new_html = $this->cp_populate( $index );
+		$new_html = $this->cp_populate( $index );
 
-		wp_send_json_success( [
-			'message' => 'refreshed messages',
-		] );
-
+		wp_send_json_success( $new_html );
 	}
 
 	/**
@@ -586,15 +579,35 @@ class ChatPress {
 	 */
 	public function chatpress_delete_message() {
 
-		$index = wp_unslash( $_POST['data']['index'] );
+		$message_id = wp_unslash( $_POST['data'] );
 
-		wp_delete_post( $index, false );
-
-		wp_send_json_success( [
-
-			'message' => $index,
-
+		$message_query = new WP_Query( [
+			'post_type'      => 'chatpress_message',
+			'posts_per_page' => -1,
 		] );
+
+		if ( $message_query->have_posts() ) {
+
+			while ( $message_query->have_posts() ) {
+
+				$message_query->the_post();
+
+				if ( get_post_meta( get_the_ID(), 'message_id', true ) === $message_id ) {
+
+					wp_delete_post( get_the_ID(), false );
+
+				}
+			}
+
+			wp_reset_postdata();
+
+		} else {
+
+			$content .= 'none';
+
+		}
+
+		wp_send_json_success( 'message id:' . $message_id );
 
 	}
 
@@ -722,6 +735,8 @@ class ChatPress {
 			$digit  = rand( 1, 10 );
 			$final .= $digit;
 		}
+
+		// BUG: CHECK IF STRING HAS ALREADY BEEN USED
 
 		return $final;
 	}

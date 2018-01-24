@@ -38,60 +38,52 @@ jQuery( document ).ready( function() {
 
 	});
 
-	jQuery( 'body' ).on( 'click', '.chatpress_button_refresh', function() {
+	jQuery( 'body' ).on( 'click', '.chatpress_button_refresh', function(e) {
 
-		//e.preventDefault();
+			e.preventDefault();
 
-		var button  = jQuery( this ),
-				index = jQuery( this ).data( 'index' );
+			var button  = jQuery( this ),
+					index = jQuery( this ).data( 'index' );
 
-			//alert( 'refreshed' );
+				jQuery.ajax({
+				type: 'POST',   // Adding Post method
+				url: cp_script.ajaxurl, // Including ajax file
+				data: {
+					"action": "chatpress_refresh_message",
+					"data":index
+				},
+				success: function( response ) { // Show returned data using the function.
+					//alert( response.data );
 
-			jQuery.ajax({
-			type: 'POST',   // Adding Post method
-			url: cp_script.ajaxurl, // Including ajax file
-			data: {
-		   	"action": "chatpress_refresh_message",
-		   	"data"   : data
-			},
-			success: function( response ) { // Show returned data using the function.
-				alert( 'refreshed' );
+					var channel = jQuery( '.chatpress_channel_message_container' );
 
-				// var channel = jQuery( '.chatpress_channel_message_container' );
+					channel.html( '' );
 
-				// channel.html( response.data.query_results )
+					channel.html( response.data )
 
-			}
+				}
 
-			});
+				});
 
 
-	});
-
+		});
 
 	jQuery( 'body' ).on( 'click', '.message_delete_link', function( e ) {
 		e.preventDefault();
 
-		var message_container = jQuery( this ).parent().parent();
-
-		var id = jQuery( this ).data( 'index' );
-
-		var data = {
-			index:id,
-		};
-
-		message_container.remove();
+		var id = jQuery( this ).data( 'message_id' );
 
 			jQuery.ajax({
 			type: 'POST',   // Adding Post method
 			url: cp_script.ajaxurl, // Including ajax file
 			data: {
 				"action": "chatpress_delete_message",
-				"data"   : data,
+				"data"  : id,
 			},
 			success: function( response ) { // Show returned data using the function.
 
-				//alert( response.data.query_results );
+				//alert( response );
+				console.log( response );
 
 			}
 
