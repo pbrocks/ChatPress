@@ -75,8 +75,6 @@ class ChatPress {
 
 		add_action( 'post_submitbox_misc_actions', [ $this, 'cp_add_shortcode_generator_button' ] );
 
-		add_action( 'wp_loaded', [ $this, 'page_loaded' ] );
-
 		add_filter( 'cron_schedules', [ $this, 'custom_cron_schedules' ] );
 
 		add_action( 'init', [ $this, 'cp_create_crontask' ] );
@@ -508,9 +506,9 @@ class ChatPress {
 
 					$messages .= '<p class="chatpress_message_datetime" style="float: left;">&nbsp;' . get_post_time( 'm/d/y h:m:s' ) . '&nbsp;&nbsp;</p>';
 
-					$messages .= '<a href="#" class="message_id_link" data-index="' . $channel_number . '" style="float: left; color: green; font-size: 10px;" data-message_id="' . get_post_meta( get_the_ID(), 'message_id', true ) . '">' . get_post_meta( get_the_ID(), 'message_id', true ) . '</a>' . '<br /> ';
+					$messages .= '<a href="#" class="message_id_link" data-index="' . $channel_number . '" style="float: left; color: green; font-size: 10px;" data-message_id="' . get_post_meta( get_the_ID(), 'message_id', true ) . '">' . get_post_meta( get_the_ID(), 'message_id', true ) . '</a><br /> ';
 
-					$messages .= '<p>' . get_the_content() . '</p>';
+					$messages .= '<p style="width: 100%;">' . $this->cp_parse( get_the_content() ) . '</p>';
 
 					$messages .= '</div>';
 			}
@@ -581,38 +579,34 @@ class ChatPress {
 
 		$message_id = wp_unslash( $_POST['data'] );
 
+		// Create the query + query the database
 		$message_query = new WP_Query( [
 			'post_type'      => 'chatpress_message',
-			'posts_per_page' => -1,
+			'meta_query' => [
+				'key'     => 'message_number',
+				'value'   => $message_id,
+				'compare' => 'IN',
+			]
 		] );
 
 		if ( $message_query->have_posts() ) {
 
 			while ( $message_query->have_posts() ) {
 
-				$message_query->the_post();
+					$message_query->the_post();
 
-				if ( get_post_meta( get_the_ID(), 'message_id', true ) === $message_id ) {
+					wp_delete_post( get_the_ID( $message_query ), true );
 
-					wp_delete_post( get_the_ID(), false );
+					wp_send_json_success( 'message id:' . $message_id );
 
 				}
+
 			}
-
-			wp_reset_postdata();
-
-		} else {
-
-			$content .= 'none';
-
-		}
-
-		wp_send_json_success( 'message id:' . $message_id );
 
 	}
 
 	/**
-	 * Parse the input string.
+	 * Parse the input string with quotes and greentext etc.
 	 *
 	 * @param string $input - string to parse.
 	 *
@@ -624,6 +618,15 @@ class ChatPress {
 
 		$output = '';
 
+		// 	> FOR GREENTEXT
+		//
+		// 	*TEXT* FOR BOLD
+		//
+		// 	_TEXT_ FOR UNDERLINE
+		//
+		// 	/TEXT/ FOR ITALIC
+
+
 		$x = 1;
 
 		for ( $i = 0; $i <= $strlen; $i++ ) {
@@ -632,53 +635,57 @@ class ChatPress {
 
 			$preceeding_char = substr( $input, $i - 1, 1 );
 
-			if ( '{' === $char ) {
 
-				if ( '{' === $preceeding_char ) {
+			// 	>> FOR MESSAGE QUOTE
+			if ( '>' === $char ) {
 
-					$output = substr( $output, 0, $i - 1 );
 
-					$link_text_id = substr( $input, $i + 1, 21 );
-
-					$output .= '>> <a data-message_id="' . $link_text_id . '" class="cp_quoted_comment_link" href="#">' . $link_text_id . '</a>';
-
-					$output .= '<div data-message_id="' . $link_text_id . '" class="cp_quoted_comment_div" style="background: white; border: solid black 1px; width: 100%; min-height: 50px; padding: 10px; display: none;">';
-
-					$message_query = new WP_Query( [
-						'post_type'      => 'chatpress_message',
-						'posts_per_page' => -1,
-					] );
-
-					if ( $message_query->have_posts() ) {
-
-						while ( $message_query->have_posts() ) {
-
-							$message_query->the_post();
-
-							if ( get_post_meta( get_the_ID(), 'message_number', true ) === $link_text_id ) {
-
-								$output .= get_the_content();
-
-							}
-						}
-
-						wp_reset_postdata();
-
-					} else {
-
-						$content .= 'none';
-
-					}
-
-					$output .= '</div>';
-
-					$i = $i + 25;
-
-				} else {
-
-						$output .= $char;
-
-				}
+				// if ( '>' === $preceeding_char ) {
+        //
+				// 	$output = substr( $output, 0, $i - 1 );
+        //
+				// 	$link_text_id = substr( $input, $i + 1, 21 );
+        //
+				// 	$output .= '>> <a data-message_id="' . $link_text_id . '" class="cp_quoted_comment_link" href="#">' . $link_text_id . '</a>';
+        //
+				// 	$output .= '<div data-message_id="' . $link_text_id . '" class="cp_quoted_comment_div" style="background: white; border: solid black 1px; width: 100%; min-height: 50px; padding: 10px; display: none;">';
+        //
+				// 	$message_query = new WP_Query( [
+				// 		'post_type'      => 'chatpress_message',
+				// 		'posts_per_page' => -1,
+				// 	] );
+        //
+				// 	if ( $message_query->have_posts() ) {
+        //
+				// 		while ( $message_query->have_posts() ) {
+        //
+				// 			$message_query->the_post();
+        //
+				// 			if ( get_post_meta( get_the_ID(), 'message_number', true ) === $link_text_id ) {
+        //
+				// 				$output .= get_the_content();
+        //
+				// 			}
+				// 		}
+        //
+				// 		wp_reset_postdata();
+        //
+				// 	} else {
+        //
+				// 		$content .= 'none';
+        //
+				// 	}
+        //
+				// 	$output .= '</div>';
+        //
+				// 	$i = $i + 25;
+        //
+				// } else {
+        //
+				// 		$output .= $char;
+        //
+				// }
+				$output .= '!';
 			} else {
 
 				$output .= $char;
@@ -739,15 +746,6 @@ class ChatPress {
 		// BUG: CHECK IF STRING HAS ALREADY BEEN USED
 
 		return $final;
-	}
-
-	/**
-	 * Runs functions on page load (front end)
-	 *
-	 * @since 0.1
-	 */
-	public function page_loaded() {
-
 	}
 
 	/**

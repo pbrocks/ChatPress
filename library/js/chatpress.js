@@ -29,7 +29,7 @@ jQuery( document ).ready( function() {
 
 				var channel = jQuery( '.chatpress_channel_message_container' );
 
-				// call refresh method
+				jQuery( '.chatpress_button_refresh' ).click(); // BUG: need to select only refresh button in channel
 
 			}
 
@@ -82,8 +82,7 @@ jQuery( document ).ready( function() {
 			},
 			success: function( response ) { // Show returned data using the function.
 
-				//alert( response );
-				console.log( response );
+				jQuery( '.chatpress_button_refresh' ).click(); // BUG: need to select only refresh button in channel
 
 			}
 
@@ -93,15 +92,20 @@ jQuery( document ).ready( function() {
 	});
 
 
-jQuery( 'body' ).on( 'click', '.message_number_link', function( e ) {
+jQuery( 'body' ).on( 'click', '.message_id_link', function( e ) {
 
 	e.preventDefault();
 
-	var message_number = jQuery( this ).data( 'message_number' ),
-			index          = jQuery( this ).data( 'index' ),
-			content        = tinymce.editors['editor_' + index].getContent();
+	var message_id = jQuery( this ).data( 'message_id' ),
+			index      = jQuery( this ).data( 'index' ),
+			input      = jQuery( ".chatpress_text_input[data-index='" + index + "']" );
 
-	tinymce.editors['editor_' + index].setContent( content + '{{' + message_number + '' );
+
+		jQuery( input ).val( jQuery( input ).val() + '>>' + message_id );
+
+		// var before = (input.value).substring(0, strPos);
+    //
+		// var after = (input.value).substring(strPos, input.value.length);
 
 });
 
