@@ -12,6 +12,10 @@
 
 class ChatPress {
 
+	public $parser;
+
+	public $crontask;
+
 	public static $options;
 
 	/**
@@ -30,9 +34,7 @@ class ChatPress {
 
 		update_option( 'cp_options', self::$options );
 
-		add_action( 'init', [ $this, 'chatpress_channel_function' ], 0 );
-
-		add_action( 'init', [ $this, 'chatpress_message_function' ], 0 );
+		add_action( 'init', [ $this, 'chatpress_cpt_function' ], 0 );
 
 		add_shortcode( 'chatpress_channel', [ $this, 'cp_shortcode_function' ] );
 
@@ -57,9 +59,11 @@ class ChatPress {
 
 		}
 
-		add_action( 'cmb2_admin_init', [ $this, 'cp_register_chatpress_channel_metabox' ] );
+		require_once dirname( __FILE__ ) . '/class-parser.php';
 
-		add_action( 'cmb2_admin_init', [ $this, 'cp_register_chatpress_message_metabox' ] );
+		$this->parser = new parser();
+
+		add_action( 'cmb2_admin_init', [ $this, 'cp_register_chatpress_channel_metabox' ] );
 
 		add_action( 'wp_enqueue_scripts', [ $this, 'cp_enqueue_styles' ] );
 
@@ -75,9 +79,9 @@ class ChatPress {
 
 		add_action( 'post_submitbox_misc_actions', [ $this, 'cp_add_shortcode_generator_button' ] );
 
-		add_filter( 'cron_schedules', [ $this, 'custom_cron_schedules' ] );
+		require_once dirname( __FILE__ ) . '/class-crontask.php';
 
-		add_action( 'init', [ $this, 'cp_create_crontask' ] );
+		$this->crontask = new crontask();
 
 		add_action( 'admin_init', array( $this, 'wpm_settings_init' ) );
 
@@ -101,30 +105,6 @@ class ChatPress {
 
 	}
 
-	/**
-	*  Make the crontask to erase old messages
-	*
-	* @since 0.1
-	*/
-	public function cp_create_crontask() {
-
-		self::$options['cp_delete_messages_after'] = 'daily';
-
-		update_option( 'cp_options', self::$options );
-
-		$cp_how_often = self::$options['cp_delete_messages_after'];
-
-		if ( 0 === self::$options['cp_prevent_email_cron_creation'] ) {
-
-			wp_schedule_event( time(), 'weekly', 'cp_delete_old_messages' );
-
-			self::$options['cp_prevent_email_cron_creation'] = 1;
-
-			update_option( 'cp_options', self::$options );
-		}
-
-	}
-
 	public function wpm_sanitize( $input ) {
 
 		$valid = [];
@@ -141,7 +121,7 @@ class ChatPress {
  *
  * @since 0.1
  */
-	public function chatpress_channel_function() {
+	public function chatpress_cpt_function() {
 
 		$labels = [
 			'name'                  => _x( 'ChatPress', 'Post Type General Name', 'chatpress' ),
@@ -193,6 +173,57 @@ class ChatPress {
 			'menu_icon'           => 'dashicons-media-document',
 		];
 		register_post_type( 'chatpress_channel', $args );
+
+		$labels = [
+			'name'                  => _x( 'Message', 'Post Type General Name', 'chatpress' ),
+			'singular_name'         => _x( 'Message', 'Post Type Singular Name', 'chatpress' ),
+			'menu_name'             => __( 'Message', 'chatpress' ),
+			'name_admin_bar'        => __( 'Message', 'chatpress' ),
+			'archives'              => __( 'Message Archives', 'chatpress' ),
+			'attributes'            => __( 'Message Attributes', 'chatpress' ),
+			'parent_item_colon'     => __( 'Parent Message:', 'chatpress' ),
+			'all_items'             => __( 'All Messages', 'chatpress' ),
+			'add_new_item'          => __( 'Add New Message', 'chatpress' ),
+			'add_new'               => __( 'Add New', 'chatpress' ),
+			'new_item'              => __( 'New Message', 'chatpress' ),
+			'edit_item'             => __( 'Edit Messagge', 'chatpress' ),
+			'update_item'           => __( 'Update Message', 'chatpress' ),
+			'view_item'             => __( 'View Item', 'chatpress' ),
+			'view_items'            => __( 'View Items', 'chatpress' ),
+			'search_items'          => __( 'Search Item', 'chatpress' ),
+			'not_found'             => __( 'Not found', 'chatpress' ),
+			'not_found_in_trash'    => __( 'Not found in Trash', 'chatpress' ),
+			'featured_image'        => __( 'Featured Image', 'chatpress' ),
+			'set_featured_image'    => __( 'Set featured image', 'chatpress' ),
+			'remove_featured_image' => __( 'Remove featured image', 'chatpress' ),
+			'use_featured_image'    => __( 'Use as featured image', 'chatpress' ),
+			'insert_into_item'      => __( 'Insert into item', 'chatpress' ),
+			'uploaded_to_this_item' => __( 'Uploaded to this item', 'chatpress' ),
+			'items_list'            => __( 'Items list', 'chatpress' ),
+			'items_list_navigation' => __( 'Items list navigation', 'chatpress' ),
+			'filter_items_list'     => __( 'Filter items list', 'chatpress' ),
+		];
+		$args   = [
+			'label'               => __( 'ChatPress', 'chatpress' ),
+			'description'         => __( 'Post Type Description', 'chatpress' ),
+			'labels'              => $labels,
+			'supports'            => [],
+			'taxonomies'          => [ 'category', 'post_tag' ],
+			'hierarchical'        => false,
+			'public'              => true,
+			'show_ui'             => true,
+			'show_in_menu'        => true,
+			'menu_position'       => 5,
+			'show_in_admin_bar'   => true,
+			'show_in_nav_menus'   => true,
+			'can_export'          => true,
+			'has_archive'         => true,
+			'exclude_from_search' => false,
+			'publicly_queryable'  => true,
+			'capability_type'     => 'page',
+			'menu_icon'           => 'dashicons-media-document',
+		];
+		register_post_type( 'chatpress_message', $args );
 
 	}
 
@@ -389,81 +420,6 @@ class ChatPress {
 
 	}
 
-	/**
-	 * Register ChatPress Message CPT
-	 *
-	 * @since 0.1
-	 */
-	public function chatpress_message_function() {
-
-		$labels = [
-			'name'                  => _x( 'Message', 'Post Type General Name', 'chatpress' ),
-			'singular_name'         => _x( 'Message', 'Post Type Singular Name', 'chatpress' ),
-			'menu_name'             => __( 'Message', 'chatpress' ),
-			'name_admin_bar'        => __( 'Message', 'chatpress' ),
-			'archives'              => __( 'Message Archives', 'chatpress' ),
-			'attributes'            => __( 'Message Attributes', 'chatpress' ),
-			'parent_item_colon'     => __( 'Parent Message:', 'chatpress' ),
-			'all_items'             => __( 'All Messages', 'chatpress' ),
-			'add_new_item'          => __( 'Add New Message', 'chatpress' ),
-			'add_new'               => __( 'Add New', 'chatpress' ),
-			'new_item'              => __( 'New Message', 'chatpress' ),
-			'edit_item'             => __( 'Edit Messagge', 'chatpress' ),
-			'update_item'           => __( 'Update Message', 'chatpress' ),
-			'view_item'             => __( 'View Item', 'chatpress' ),
-			'view_items'            => __( 'View Items', 'chatpress' ),
-			'search_items'          => __( 'Search Item', 'chatpress' ),
-			'not_found'             => __( 'Not found', 'chatpress' ),
-			'not_found_in_trash'    => __( 'Not found in Trash', 'chatpress' ),
-			'featured_image'        => __( 'Featured Image', 'chatpress' ),
-			'set_featured_image'    => __( 'Set featured image', 'chatpress' ),
-			'remove_featured_image' => __( 'Remove featured image', 'chatpress' ),
-			'use_featured_image'    => __( 'Use as featured image', 'chatpress' ),
-			'insert_into_item'      => __( 'Insert into item', 'chatpress' ),
-			'uploaded_to_this_item' => __( 'Uploaded to this item', 'chatpress' ),
-			'items_list'            => __( 'Items list', 'chatpress' ),
-			'items_list_navigation' => __( 'Items list navigation', 'chatpress' ),
-			'filter_items_list'     => __( 'Filter items list', 'chatpress' ),
-		];
-		$args   = [
-			'label'               => __( 'ChatPress', 'chatpress' ),
-			'description'         => __( 'Post Type Description', 'chatpress' ),
-			'labels'              => $labels,
-			'supports'            => [],
-			'taxonomies'          => [ 'category', 'post_tag' ],
-			'hierarchical'        => false,
-			'public'              => true,
-			'show_ui'             => true,
-			'show_in_menu'        => true,
-			'menu_position'       => 5,
-			'show_in_admin_bar'   => true,
-			'show_in_nav_menus'   => true,
-			'can_export'          => true,
-			'has_archive'         => true,
-			'exclude_from_search' => false,
-			'publicly_queryable'  => true,
-			'capability_type'     => 'page',
-			'menu_icon'           => 'dashicons-media-document',
-		];
-		register_post_type( 'chatpress_message', $args );
-
-	}
-
-	/**
-	 * Add CMB2 fields to ChatPress Message post-type.
-	 *
-	 * @since 0.1
-	 */
-	public function cp_register_chatpress_message_metabox() {
-		$prefix = 'chatpress_message_';
-
-		$cmb_message = new_cmb2_box( [
-			'id'           => $prefix . 'metabox',
-			'title'        => esc_html__( 'ChatPress Info', 'cmb2' ),
-			'object_types' => [ 'chatpress_message' ], // Post type.
-		] );
-
-	}
 
 	/**
 	 *  Populate the channel content container with posts that belong in that channel.
@@ -508,7 +464,7 @@ class ChatPress {
 
 					$messages .= '<a href="#" class="message_id_link" data-index="' . $channel_number . '" style="float: left; color: green; font-size: 10px;" data-message_id="' . get_post_meta( get_the_ID(), 'message_id', true ) . '">' . get_post_meta( get_the_ID(), 'message_id', true ) . '</a><br /> ';
 
-					$messages .= '<p style="width: 100%;">' . $this->cp_parse( get_the_content() ) . '</p>';
+					$messages .= '<p style="width: 100%;">' . $this->parser->cp_parse( get_the_content() ) . '</p>';
 
 					$messages .= '</div>';
 			}
@@ -602,129 +558,6 @@ class ChatPress {
 				}
 
 			}
-
-	}
-
-	/**
-	 * Parse the input string with quotes and greentext etc.
-	 *
-	 * @param string $input - string to parse.
-	 *
-	 * @since 0.1
-	 */
-	public function cp_parse( $input ) {
-
-		$strlen = strlen( $input ) + 1;
-
-		$output = '';
-
-		// 	> FOR GREENTEXT
-		//
-		// 	*TEXT* FOR BOLD
-		//
-		// 	_TEXT_ FOR UNDERLINE
-		//
-		// 	/TEXT/ FOR ITALIC
-
-
-		$x = 1;
-
-		for ( $i = 0; $i <= $strlen; $i++ ) {
-
-			$char = substr( $input, $i, 1 );
-
-			$preceeding_char = substr( $input, $i - 1, 1 );
-
-
-			// 	>> FOR MESSAGE QUOTE
-			if ( '>' === $char ) {
-
-
-				// if ( '>' === $preceeding_char ) {
-        //
-				// 	$output = substr( $output, 0, $i - 1 );
-        //
-				// 	$link_text_id = substr( $input, $i + 1, 21 );
-        //
-				// 	$output .= '>> <a data-message_id="' . $link_text_id . '" class="cp_quoted_comment_link" href="#">' . $link_text_id . '</a>';
-        //
-				// 	$output .= '<div data-message_id="' . $link_text_id . '" class="cp_quoted_comment_div" style="background: white; border: solid black 1px; width: 100%; min-height: 50px; padding: 10px; display: none;">';
-        //
-				// 	$message_query = new WP_Query( [
-				// 		'post_type'      => 'chatpress_message',
-				// 		'posts_per_page' => -1,
-				// 	] );
-        //
-				// 	if ( $message_query->have_posts() ) {
-        //
-				// 		while ( $message_query->have_posts() ) {
-        //
-				// 			$message_query->the_post();
-        //
-				// 			if ( get_post_meta( get_the_ID(), 'message_number', true ) === $link_text_id ) {
-        //
-				// 				$output .= get_the_content();
-        //
-				// 			}
-				// 		}
-        //
-				// 		wp_reset_postdata();
-        //
-				// 	} else {
-        //
-				// 		$content .= 'none';
-        //
-				// 	}
-        //
-				// 	$output .= '</div>';
-        //
-				// 	$i = $i + 25;
-        //
-				// } else {
-        //
-				// 		$output .= $char;
-        //
-				// }
-				$output .= '!';
-			} else {
-
-				$output .= $char;
-
-			}
-		}
-
-		return $output;
-
-	}
-
-	/**
-		* Create cron schedule for garbage collection
-		*
-		* @param Object $schedules - string to search through.
-		*
-		* @since 0.1
-		*/
-	public function custom_cron_schedules( $schedules ) {
-
-		if ( ! isset( $schedules['weekly'] ) ) {
-
-			$schedules['weekly'] = array(
-				'interval' => 604800,
-				'display'  => __( 'Once Per Week' ),
-			);
-
-		}
-
-		if ( ! isset( $schedules['monthly'] ) ) {
-
-			$schedules['monthly'] = array(
-				'interval' => 2628000,
-				'display'  => __( 'Once Per Month' ),
-			);
-
-		}
-
-		return $schedules;
 
 	}
 
