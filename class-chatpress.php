@@ -16,6 +16,8 @@ class ChatPress {
 
 	public $crontask;
 
+	public $settings;
+
 	public static $options;
 
 	/**
@@ -59,6 +61,8 @@ class ChatPress {
 
 		}
 
+		// TODO: Hide CPTs from menu
+
 		require_once dirname( __FILE__ ) . '/class-parser.php';
 
 		$this->parser = new parser();
@@ -83,37 +87,14 @@ class ChatPress {
 
 		$this->crontask = new crontask();
 
-		add_action( 'admin_init', array( $this, 'wpm_settings_init' ) );
+
+		require_once dirname( __FILE__ ) . '/class-chatpress_settings.php';
+
+		$this->settings = new chatpress_settings();
 
 	}
 
-	/**
-	* [wpm_settings_init A method to create the settings used by the plugin.]
-	*/
-	public function wpm_settings_init() {
-			register_setting(
-				'cp_options',
-				'cp_options',
-				[ $this, 'wpm_sanitize' ]
-			);
 
-			register_setting(
-				'cp_prevent_email_cron_creation',
-				'cp_prevent_email_cron_creation',
-				[ $this, 'wpm_sanitize' ]
-			);
-
-	}
-
-	public function wpm_sanitize( $input ) {
-
-		$valid = [];
-
-		$valid['wpm_show_monitor'] = (bool) empty( $input['cp_prevent_email_cron_creation'] ) ? 0 : 1;
-
-		return $valid;
-
-	}
 
 
 	/**

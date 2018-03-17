@@ -5,7 +5,11 @@ class crontask extends ChatPress {
 
 		add_filter( 'cron_schedules', [ $this, 'custom_cron_schedules' ] );
 
-		add_action( 'init', [ $this, 'cp_create_crontask' ] );
+		if ( ! wp_next_scheduled( 'cp_delete_old_messages' ) ) {
+			wp_schedule_event( time(), 'weekly', 'cp_delete_old_messages' );
+		}
+
+		add_action( 'cp_delete_old_messages', [ $this, 'cp_delete_old_messages' ] );
 
 	}
 
@@ -40,29 +44,26 @@ class crontask extends ChatPress {
 
 		}
 
-		/**
-		*  Make the crontask to erase old messages
-		*
-		* @since 0.1
-		*/
-		public function cp_create_crontask() {
+		public function cp_delete_old_messages() {
+			$the_query = new WP_Query( [
+				'post_type' => 'chatpress_message',
+				'date_query' => array(
+        'before' => date('Y-m-d', strtotime('-7 days'))
+    		)
+			 ] );
 
-			self::$options['cp_delete_messages_after'] = 'daily';
+			if ( $the_query->have_posts() ) {
 
-			update_option( 'cp_options', self::$options );
+				while ( $the_query->have_posts() ) {
+					$the_query->the_post();
+					wp_delete_post( get_the_ID() );
+				}
 
-			$cp_how_often = self::$options['cp_delete_messages_after'];
-
-			if ( 0 === self::$options['cp_prevent_email_cron_creation'] ) {
-
-				wp_schedule_event( time(), 'weekly', 'cp_delete_old_messages' );
-
-				self::$options['cp_prevent_email_cron_creation'] = 1;
-
-				update_option( 'cp_options', self::$options );
+				wp_reset_postdata();
 			}
 
 		}
+
 }
 
 $crontask = new crontask();
