@@ -87,7 +87,6 @@ class ChatPress {
 
 		$this->crontask = new crontask();
 
-
 		require_once dirname( __FILE__ ) . '/class-chatpress_settings.php';
 
 		$this->settings = new chatpress_settings();
@@ -518,12 +517,12 @@ class ChatPress {
 
 		// Create the query + query the database
 		$message_query = new WP_Query( [
-			'post_type'      => 'chatpress_message',
+			'post_type'  => 'chatpress_message',
 			'meta_query' => [
 				'key'     => 'message_number',
 				'value'   => $message_id,
 				'compare' => 'IN',
-			]
+			],
 		] );
 
 		if ( $message_query->have_posts() ) {
@@ -536,9 +535,8 @@ class ChatPress {
 
 					wp_send_json_success( 'message id:' . $message_id );
 
-				}
-
 			}
+		}
 
 	}
 

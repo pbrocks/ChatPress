@@ -1,6 +1,6 @@
 <?php
 
-class crontask extends ChatPress {
+class Crontask extends ChatPress {
 	public function __construct() {
 
 		add_filter( 'cron_schedules', [ $this, 'custom_cron_schedules' ] );
@@ -20,35 +20,35 @@ class crontask extends ChatPress {
 			*
 			* @since 0.1
 			*/
-		public function custom_cron_schedules( $schedules ) {
+	public function custom_cron_schedules( $schedules ) {
 
-			if ( ! isset( $schedules['weekly'] ) ) {
+		if ( ! isset( $schedules['weekly'] ) ) {
 
 				$schedules['weekly'] = array(
 					'interval' => 604800,
 					'display'  => __( 'Once Per Week' ),
 				);
 
-			}
+		}
 
-			if ( ! isset( $schedules['monthly'] ) ) {
+		if ( ! isset( $schedules['monthly'] ) ) {
 
 				$schedules['monthly'] = array(
 					'interval' => 2628000,
 					'display'  => __( 'Once Per Month' ),
 				);
 
-			}
+		}
 
 			return $schedules;
 
-		}
+	}
 
-		public function cp_delete_old_messages() {
+	public function cp_delete_old_messages() {
 			$the_query = new WP_Query( [
 				'post_type' => 'chatpress_message',
 				'date_query' => array(
-        'before' => date('Y-m-d', strtotime('-7 days'))
+					'before' => date('Y-m-d', strtotime('-7 days'))
     		)
 			 ] );
 
